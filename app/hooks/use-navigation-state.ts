@@ -18,13 +18,18 @@ export interface NavigationState {
   path?: string;
   publicPath?: string;
   threadId?: string;
+  /** Selected case on /inbox (`?case=<id>`). */
+  caseId?: string;
+  /** Active status filter on /inbox (`?status=`). */
+  status?: string;
 }
 
 export function useNavigationState() {
   useAgentRouteState<NavigationState>({
     browserTabId: TAB_ID,
     requestSource: TAB_ID,
-    getNavigationState: ({ pathname }) => navigationStateForPath(pathname),
+    getNavigationState: ({ pathname, searchParams }) =>
+      navigationStateForPath(pathname, searchParams),
     getCommandPath: commandPathForNavigation,
   });
 }
@@ -62,17 +67,26 @@ function matchesPathPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
-export function navigationStateForPath(pathname: string): NavigationState {
+export function navigationStateForPath(
+  pathname: string,
+  searchParams?: URLSearchParams,
+): NavigationState {
   const threadId = threadIdFromPath(pathname);
+  const onInbox = pathname.startsWith("/inbox");
+  const caseId = onInbox ? searchParams?.get("case") : null;
+  const status = onInbox ? searchParams?.get("status") : null;
   return {
     view: viewForPath(pathname),
     path: pathname,
     publicPath: appPathFromLocalRoute(pathname),
     ...(threadId ? { threadId } : {}),
+    ...(caseId ? { caseId } : {}),
+    ...(status ? { status } : {}),
   };
 }
 
 function viewForPath(pathname: string): string {
+  if (pathname.startsWith("/inbox")) return "inbox";
   if (isChatPathname(pathname)) return "chat";
   if (pathname === HOME_PATH) return "home";
   if (pathname.startsWith("/database")) return "database";
@@ -93,6 +107,8 @@ function pathForView(view?: string): string {
       return NEW_CHAT_PATH;
     case "home":
       return HOME_PATH;
+    case "inbox":
+      return "/inbox";
     case "database":
       return "/database";
     case "extensions":

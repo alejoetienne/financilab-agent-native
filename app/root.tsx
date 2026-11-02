@@ -94,10 +94,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 function DbSyncSetup() {
   const qc = useQueryClient();
+  const { pathname } = useLocation();
   useNavigationState();
   useDbSync({
     queryClient: qc,
     ignoreSource: TAB_ID,
+    // The case inbox is shared: the agent (chat, CLI, MCP) and teammates
+    // change cases while it is open.
+    ...(pathname.startsWith("/inbox")
+      ? {
+          realtime: {
+            reason:
+              "the shared case inbox changes when the agent or a teammate acts on cases",
+          },
+        }
+      : {}),
   });
   return null;
 }

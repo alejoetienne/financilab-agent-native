@@ -1,8 +1,8 @@
 {
   "name": "financilab-agent-native",
-  "displayName": "Financilab Agent Native",
+  "displayName": "FinanciLab Scam Shield",
   "private": true,
-  "description": "Workspace app for Financilab Agent Native.",
+  "description": "Shared scam-case inbox where a human and an AI agent triage suspicious messages on the same SQL data.",
   "type": "module",
   "scripts": {
     "migrate:production": "tsx scripts/migrate-production.ts",
@@ -116,5 +116,7 @@
       "coreVersion": "0.223.0",
       "shape": "standalone"
     }
-  }
+  },
+  "license": "MIT",
+  "author": "Alejandro Arana / FinanciLab"
 }

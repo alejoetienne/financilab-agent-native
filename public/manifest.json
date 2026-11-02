@@ -1,7 +1,7 @@
 {
-  "name": "Financilab Agent Native",
-  "short_name": "Financilab Agent Native",
-  "description": "Workspace app for Financilab Agent Native.",
+  "name": "FinanciLab Scam Shield",
+  "short_name": "Scam Shield",
+  "description": "Shared scam-case inbox for humans and an AI agent.",
   "start_url": "./home",
   "background_color": "#111111",
   "theme_color": "#18181B",

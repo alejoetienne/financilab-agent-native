@@ -1,5 +1,5 @@
 const rawAppName = "financilab-agent-native";
-const rawAppTitle = "Financilab Agent Native";
+const rawAppTitle = "FinanciLab Scam Shield";
 
 const APP_NAME_PLACEHOLDER = "{" + "{APP_NAME}}";
 const APP_TITLE_PLACEHOLDER = "{" + "{APP_TITLE}}";
