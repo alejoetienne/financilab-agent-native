@@ -1,4 +1,3 @@
-import { sendToAgentChat } from "@agent-native/core/client/agent-chat";
 import {
   actionErrorMessage,
   useActionMutation,
@@ -27,6 +26,7 @@ import {
 import { STATUS_LABEL, type Status } from "@/components/inbox/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAskAgent } from "@/lib/ask-agent";
 import { cn } from "@/lib/utils";
 
 export function meta() {
@@ -70,6 +70,8 @@ export default function InboxRoute() {
     onError: (e) => toast.error(actionErrorMessage(e) ?? "Could not load demo cases."),
   });
 
+  const { ask: askAgent, pending: triaging } = useAskAgent();
+
   function update(next: Record<string, string | null>) {
     const sp = new URLSearchParams(searchParams);
     for (const [k, v] of Object.entries(next)) {
@@ -81,11 +83,9 @@ export default function InboxRoute() {
   }
 
   function triage() {
-    sendToAgentChat({
+    void askAgent({
       message:
         "Triage the case inbox: analyze every new case, flag the scams, and draft a safe reply and an education tip for each flagged case. Then summarize what you did.",
-      submit: true,
-      openSidebar: true,
     });
   }
 
@@ -120,6 +120,8 @@ export default function InboxRoute() {
               variant="outline"
               className="h-8 text-xs"
               onClick={triage}
+              disabled={triaging}
+              aria-busy={triaging}
               title="Ask the agent to triage the inbox"
             >
               <IconSparkles className="size-3.5" />

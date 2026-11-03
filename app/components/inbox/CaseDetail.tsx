@@ -1,4 +1,3 @@
-import { sendToAgentChat } from "@agent-native/core/client/agent-chat";
 import {
   actionErrorMessage,
   useActionMutation,
@@ -34,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useAskAgent } from "@/lib/ask-agent";
 import { cn } from "@/lib/utils";
 
 import {
@@ -117,6 +117,7 @@ export function CaseDetail({
   const [notes, setNotes] = useState("");
   const patchCache = usePatchCaseCache();
   const { data, isPending, error } = useActionQuery("get-case", { id });
+  const { ask, pending: asking } = useAskAgent();
 
   const onFail = (fallback: string) => (err: Error, _v: unknown, ctx: unknown) => {
     (ctx as (() => void) | undefined)?.();
@@ -174,14 +175,12 @@ export function CaseDetail({
   const reasons = c.signals.filter((s) => s.weight !== 0 || s.id.startsWith("llm_"));
 
   function askAgent() {
-    sendToAgentChat({
+    void ask({
       message:
         lang === "es"
           ? "Revisa este caso: explícame el riesgo y qué debo hacer. Si es estafa, márcalo y prepara una respuesta segura y un consejo."
           : "Review this case: explain the risk and what I should do. If it is a scam, flag it and draft a safe reply and a tip.",
       context: JSON.stringify({ caseId: c.id }),
-      submit: true,
-      openSidebar: true,
     });
   }
 
@@ -290,7 +289,7 @@ export function CaseDetail({
           <IconCircleCheck className="size-4" />
           {closed ? "Resolved" : "Resolve"}
         </Button>
-        <Button size="sm" variant="ghost" onClick={askAgent} className="text-violet-700 hover:text-violet-800 dark:text-violet-300">
+        <Button size="sm" variant="ghost" onClick={askAgent} disabled={asking} aria-busy={asking} className="text-violet-700 hover:text-violet-800 dark:text-violet-300">
           <IconSparkles className="size-4" />
           Ask agent
         </Button>
