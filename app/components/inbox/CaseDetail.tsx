@@ -269,7 +269,7 @@ export function CaseDetail({
           <IconFlag className="size-4" />
           {c.status === "flagged" ? "Flagged" : "Flag"}
         </Button>
-        <Button size="sm" variant="outline" disabled={reply.isPending} onClick={() => reply.mutate({ id: c.id, lang })}>
+        <Button size="sm" variant="outline" disabled={reply.isPending} onClick={() => reply.mutate({ id: c.id, lang: "auto" })}>
           <IconMessageReply className="size-4" />
           {reply.isPending ? "Drafting…" : "Safe reply"}
         </Button>
@@ -278,7 +278,7 @@ export function CaseDetail({
           variant="outline"
           disabled={tip.isPending}
           onClick={() => {
-            tip.mutate({ id: c.id, lang, variant: tipVariant });
+            tip.mutate({ id: c.id, lang: "auto", variant: tipVariant });
             setTipVariant((v) => v + 1);
           }}
         >

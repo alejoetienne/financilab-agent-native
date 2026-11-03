@@ -86,7 +86,7 @@ export default function InboxRoute() {
   function triage() {
     void askAgent({
       message:
-        "Triage the case inbox: analyze every new case, flag the scams, and draft a safe reply and an education tip for each flagged case. Then summarize what you did.",
+        "Triage the case inbox: analyze every new case, flag the scams, and draft a safe reply and an education tip for each flagged case (in the language of that case's message). Then summarize what you did.",
     });
   }
 

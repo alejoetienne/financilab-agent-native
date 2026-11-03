@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { getDb, schema } from "../server/db/index.js";
 import { inboxLink } from "../server/lib/case-link.js";
+import { detectLanguage } from "../server/lib/language.js";
 import {
   caseScope,
   CASE_STATUSES,
@@ -14,7 +15,7 @@ import {
 
 export default defineAction({
   description:
-    "List cases in the shared Scam Shield inbox, newest first, with counts per status and whether each case already has a saved safe reply/tip. Filter by status, verdict or a text search.",
+    "List cases in the shared Scam Shield inbox, newest first, with counts per status and whether each case already has a saved safe reply/tip, plus messageLang (detected es/en language of the message; drafts/tips default to it). Filter by status, verdict or a text search.",
   schema: z.object({
     status: z
       .enum(CASE_STATUSES)
@@ -100,6 +101,7 @@ export default defineAction({
         lastActor: r.lastActor as Actor,
         hasSafeReply: Boolean(r.hasSafeReply),
         hasTip: Boolean(r.hasTip),
+        messageLang: detectLanguage(r.text),
         text: r.text.length > 280 ? `${r.text.slice(0, 277)}…` : r.text,
       })),
       counts: {

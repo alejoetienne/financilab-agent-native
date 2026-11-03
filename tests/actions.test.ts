@@ -131,6 +131,54 @@ describe("case inbox actions", () => {
     expect(tip.tip).toMatch(/PayPal/);
   });
 
+  it("drafts replies and tips in the message's language by default, with an explicit override", async () => {
+    const es = await call(
+      addCase,
+      {
+        text: "Banpro le informa: responda este mensaje con el código OTP de 6 dígitos que le acabamos de enviar.",
+        source: "sms",
+        analyze: true,
+      },
+      user,
+    );
+    expect(es.messageLang).toBe("es");
+    const en = await call(
+      addCase,
+      { text: "Your PayPal account is limited. Confirm your identity now.", url: "https://paypa1-security-check.com/login", source: "email" },
+      user,
+    );
+    expect(en.messageLang).toBe("en");
+
+    // Default (no lang) -> auto -> message language, for agent triage and UI alike.
+    const esReply = await call(draftSafeReply, { id: es.id }, agent);
+    expect(esReply.lang).toBe("es");
+    expect(esReply.safeReply).toMatch(/\b(No|Gracias)\b.*(códigos|datos|canales)/);
+    const esTip = await call(educationTip, { id: es.id, lang: "auto" }, user);
+    expect(esTip.lang).toBe("es");
+    const enReply = await call(draftSafeReply, { id: en.id }, agent);
+    expect(enReply.lang).toBe("en");
+    expect(enReply.safeReply).toMatch(/\b(I|Thanks)\b/);
+    const enTip = await call(educationTip, { id: en.id }, agent);
+    expect(enTip.lang).toBe("en");
+    expect(enTip.tip).not.toBe(
+      (await call(educationTip, { id: en.id, lang: "es" }, agent)).tip,
+    );
+
+    // Explicit override still wins.
+    const forced = await call(draftSafeReply, { id: es.id, lang: "en" }, agent);
+    expect(forced.lang).toBe("en");
+    expect(forced.safeReply).not.toBe(esReply.safeReply);
+
+    const listed = await call(listCases, { query: "Banpro le informa" }, agent);
+    expect(listed.cases.find((c) => c.id === es.id)?.messageLang).toBe("es");
+    const detail = await call(getCase, { id: en.id }, user);
+    expect(detail.messageLang).toBe("en");
+  });
+
+  it("rejects an unknown lang", async () => {
+    await expect(call(draftSafeReply, { id: "x", lang: "fr" }, agent)).rejects.toThrow();
+  });
+
   it("seeds six synthetic demo cases once and summarizes the inbox", async () => {
     const first = await call(seedDemo, {}, agent);
     expect(first.created).toBe(6);

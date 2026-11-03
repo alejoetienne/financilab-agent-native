@@ -2,10 +2,12 @@ import { fail, type ActionRunContext } from "@agent-native/core/action";
 import { and, eq, isNull, type SQL } from "drizzle-orm";
 
 import { getDb, schema } from "../db/index.js";
+import { detectLanguage } from "./language.js";
 import {
   analyzeMessage,
   CATEGORY_LABELS,
   isCategory,
+  type Locale,
   type Signal,
 } from "./scam-shield.js";
 
@@ -29,6 +31,8 @@ export interface CaseDto {
   updatedAt: string;
   source: CaseSource;
   text: string;
+  /** Detected language of the message; drafts/tips default to it. */
+  messageLang: Locale;
   url: string | null;
   sender: string | null;
   riskScore: number | null;
@@ -99,6 +103,7 @@ export function toCaseDto(row: CaseRow): CaseDto {
     updatedAt: row.updatedAt,
     source: row.source as CaseSource,
     text: row.text,
+    messageLang: detectLanguage(row.text),
     url: row.url,
     sender: row.sender,
     riskScore: row.riskScore,
