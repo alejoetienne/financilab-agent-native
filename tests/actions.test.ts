@@ -154,6 +154,24 @@ describe("case inbox actions", () => {
     await expect(
       call(getCase, { id: mine.cases[0]!.id }, outsider),
     ).rejects.toMatchObject({ errorCode: "not_found" });
+    // The not-found hint is scoped too: no ids from another org.
+    await expect(
+      call(getCase, { id: mine.cases[0]!.id }, outsider),
+    ).rejects.toSatisfy((e: Error) => !/Similar case ids/.test(e.message));
+  });
+
+  it("points a mis-copied case id at the real one instead of guessing", async () => {
+    const [a, b] = (await call(listCases, {}, agent)).cases;
+    // The failing triage call spliced one id's head onto another id's tail.
+    const spliced = `${a!.id.slice(0, 23)}-${b!.id.slice(24, 35)}`;
+    const err = await call(getCase, { id: spliced }, agent).catch((e) => e);
+    expect(err).toMatchObject({ errorCode: "not_found" });
+    expect(err.message).toMatch(/not a valid 36-character case id/);
+    expect(err.message).toContain(a!.id);
+
+    const listed = await call(listCases, {}, agent);
+    expect(listed.cases[0]).toHaveProperty("hasSafeReply");
+    expect(listed.cases[0]).toHaveProperty("hasTip");
   });
 
   it("requires a signed-in identity", async () => {

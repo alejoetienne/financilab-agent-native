@@ -14,7 +14,7 @@ import {
 
 export default defineAction({
   description:
-    "List cases in the shared Scam Shield inbox, newest first, with counts per status. Filter by status, verdict or a text search.",
+    "List cases in the shared Scam Shield inbox, newest first, with counts per status and whether each case already has a saved safe reply/tip. Filter by status, verdict or a text search.",
   schema: z.object({
     status: z
       .enum(CASE_STATUSES)
@@ -71,6 +71,8 @@ export default defineAction({
           flaggedBy: c.flaggedBy,
           lastActor: c.lastActor,
           lastAction: c.lastAction,
+          hasSafeReply: sql<boolean>`${c.safeReply} is not null`,
+          hasTip: sql<boolean>`${c.tip} is not null`,
         })
         .from(c)
         .where(and(...filters))
@@ -96,6 +98,8 @@ export default defineAction({
         status: r.status as CaseStatus,
         flaggedBy: (r.flaggedBy as Actor | null) ?? null,
         lastActor: r.lastActor as Actor,
+        hasSafeReply: Boolean(r.hasSafeReply),
+        hasTip: Boolean(r.hasTip),
         text: r.text.length > 280 ? `${r.text.slice(0, 277)}…` : r.text,
       })),
       counts: {

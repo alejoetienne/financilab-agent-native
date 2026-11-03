@@ -6,6 +6,7 @@ import {
 import {
   IconDatabaseImport,
   IconInbox,
+  IconLoader2,
   IconSearch,
   IconShieldCheck,
   IconSparkles,
@@ -124,8 +125,12 @@ export default function InboxRoute() {
               aria-busy={triaging}
               title="Ask the agent to triage the inbox"
             >
-              <IconSparkles className="size-3.5" />
-              Triage with agent
+              {triaging ? (
+                <IconLoader2 className="size-3.5 animate-spin" aria-hidden />
+              ) : (
+                <IconSparkles className="size-3.5" aria-hidden />
+              )}
+              {triaging ? "Sending to agent…" : "Triage with agent"}
             </Button>
           </div>
           <div role="tablist" aria-label="Filter by status" className="flex flex-wrap gap-1">

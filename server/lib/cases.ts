@@ -132,9 +132,49 @@ export async function loadCase(
     .where(and(eq(schema.cases.id, id), caseScope(ctx)))
     .limit(1);
   if (!row) {
-    fail(`Case ${id} not found.`, { errorCode: "not_found", statusCode: 404 });
+    fail(await notFoundMessage(id, ctx), {
+      errorCode: "not_found",
+      statusCode: 404,
+    });
   }
   return row;
+}
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * LLM callers sometimes mis-copy a long UUID (e.g. splicing the head of one id
+ * onto the tail of another). Never guess silently — a write on the wrong case
+ * is worse than a miss — but name the visible ids that share a segment so the
+ * caller can retry with the exact id in one step.
+ */
+async function notFoundMessage(id: string, ctx?: ActionRunContext) {
+  const base = `Case ${id} not found.`;
+  const needle = id.trim().toLowerCase();
+  const segments = needle.split("-").filter((s) => s.length >= 4);
+  if (!segments.length) return base;
+  const rows = await getDb()
+    .select({ id: schema.cases.id, sender: schema.cases.sender })
+    .from(schema.cases)
+    .where(caseScope(ctx))
+    .limit(500);
+  const candidates = rows
+    .filter((r) => {
+      const parts = r.id.toLowerCase().split("-");
+      return segments.some(
+        (s) => parts.includes(s) || r.id.toLowerCase().startsWith(s),
+      );
+    })
+    .slice(0, 3);
+  const format = UUID_RE.test(needle)
+    ? ""
+    : " That id is not a valid 36-character case id; copy ids exactly from list-cases or inbox-summary.";
+  if (!candidates.length) return `${base}${format}`;
+  const hint = candidates
+    .map((c) => (c.sender ? `${c.id} (${c.sender})` : c.id))
+    .join(", ");
+  return `${base}${format} Similar case ids: ${hint}. Retry with the exact id.`;
 }
 
 export async function recordEvent(

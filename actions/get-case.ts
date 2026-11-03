@@ -10,7 +10,9 @@ export default defineAction({
   description:
     "Get one case with its full analysis (score, verdict, signals with ES/EN reasons, explanations, advice), safe reply, tip, notes and activity history (who did what: user or agent).",
   schema: z.object({
-    id: z.string().min(1).describe("Case id from list-cases"),
+    id: z.string().min(1).describe(
+        "Exact full case id (36-char UUID) copied verbatim from list-cases or inbox-summary",
+      ),
   }),
   http: { method: "GET" },
   readOnly: true,
