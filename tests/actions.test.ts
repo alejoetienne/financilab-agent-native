@@ -180,3 +180,15 @@ describe("case inbox actions", () => {
     ).rejects.toMatchObject({ errorCode: "unauthenticated" });
   });
 });
+
+import resetDemo from "../actions/reset-demo";
+describe("reset-demo", () => {
+  it("clears only the caller's org cases", async () => {
+    await call(seedDemo, {}, user);
+    await call(seedDemo, {}, outsider);
+    const r = await call(resetDemo, { confirm: true }, user);
+    expect(r.deletedCases).toBeGreaterThan(0);
+    expect((await call(listCases, {}, user)).counts.all).toBe(0);
+    expect((await call(listCases, {}, outsider)).counts.all).toBeGreaterThan(0);
+  });
+});
